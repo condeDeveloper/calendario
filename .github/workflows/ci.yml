@@ -1,0 +1,36 @@
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # O juiz e o dominio inteiro: todos os 3.652.059 dias entre 0001-01-01 e
+      # 9999-12-31, comparados um a um com o DateOnly, o DateTime e o ISOWeek.
+      # Nao ha amostra aqui -- se passa, nao existe data em que erre.
+      - name: testes
+        run: dotnet test testes/Calendario.Testes/Calendario.Testes.csproj -c Release --nologo -v q
+
+      # As medidas rodam para REGISTRAR numeros. Nao ha asseveracao de tempo:
+      # teste de relogio em maquina compartilhada falha sem nada ter piorado.
+      - name: o ciclo de 400 anos, conferido
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- ciclo
+
+      - name: a conversao, contra o DateOnly
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- velocidade
